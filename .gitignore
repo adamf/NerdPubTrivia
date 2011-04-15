@@ -1,0 +1,10 @@
+# Editor Swap Files
+*~
+*.swp
+
+# Compiled Files
+*.pyc
+*.pyh
+*.pyd
+*.pyw
+

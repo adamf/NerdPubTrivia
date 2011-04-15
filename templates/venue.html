@@ -1,0 +1,58 @@
+{% include "header.html" %}
+<table style="border-width: 2px; border-style: solid;">
+ <tr>
+  <td>&nbsp;</td>
+  <td>Venue Name</td>
+  <td>Venue Address</td>
+  <td>Contact Email</td>
+  <td>Contact Phone</td>
+ </tr>
+{% for v in venues %}
+ {% if v.key != edit_key  %}
+ <tr>
+  <td><a href="/admin/venue?edit={{ v.key }}">Edit</a></td>
+  <td>{{ v.venue_name }}</td>
+  <td>{{ v.venue_address }}</td>
+  <td>{{ v.venue_contact_email }}</td>
+  <td>{{ v.venue_contact_phone }}</td>
+ </tr>
+ {% endif %}
+{% endfor %}
+</table>
+<form method="post">
+<table>
+  <tr><th colspan="2" style="text-align: left;">Add a Venue</th></tr>
+  <tr>
+    <td style="text-align: right;">Venue Name</td>
+    {% if edit_key %}
+    <td><input name="vname_show" type="text" size="40" maxlength="512" 
+	       value="{{ edit_venue.venue_name|default:''}}" disabled="true" />
+        <input type="hidden" name="vname" value="{{edit_venue.venue_name}}" />
+    </td>
+    {% else %}
+    <td><input name="vname" type="text" size="40" maxlength="512"
+	       value="{{ edit_venue.venue_address|default:''}}"
+	       /></td>
+    {% endif %}
+  </tr>
+  <tr>
+    <td style="text-align: right;">Venue Address</td>
+    <td><input name="vaddress" type="text" size="40" maxlength="512"
+	       value="{{ edit_venue.venue_address|default:''}}"
+	       /></td>
+  </tr>
+  <tr>
+    <td style="text-align: right;">Contact Email</td>
+    <td><input name="cemail" type="text" size="40" maxlength="256"
+	       value="{{ edit_venue.venue_contact_email|default:''}}"
+	       /></td>
+  </tr>
+  <tr>
+    <td style="text-align: right;">Contact Phone</td>
+    <td><input name="cphone" type="text" size="40" maxlength="34"
+	       value="{{ edit_venue.venue_contact_phone|default:''}}"
+	       /></td>
+  </tr>
+  <tr><td colspan="2" style="text-align: right;"><input type="submit" value="Save Venue" /></td></tr>
+</table>
+{% include "footer.html" %}
