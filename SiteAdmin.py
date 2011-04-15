@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 #
 import datetime
+import time
 import os
-from site_db import models
 from google.appengine.ext import webapp
-from google.appengine.ext import db
 from google.appengine.ext.webapp import util
 from google.appengine.dist import use_library
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 use_library('django', '1.2')
 from google.appengine.ext.webapp import template
+from google.appengine.ext import db
+from site_db import models
 
 
 class TestHandler(webapp.RequestHandler):
@@ -69,22 +70,18 @@ class GameHandler(webapp.RequestHandler):
         self.response.out.write(template.render(path,template_values))
         
     def post(self):
-        v = self.request.get('vname').strip()
-        if v:
-            venue = models.Venue(venue_name=v)
-            if self.request.get('vaddress').strip():
-                venue.venue_address = self.request.get('vaddress').strip()
-            else:
-                venue.venue_address = None
-            if self.request.get('cemail').strip():
-                venue.venue_contact_email = self.request.get('cemail').strip()
-            else:
-                venue.venue_contact_email = None
-            if self.request.get('cphone').strip():
-                venue.venue_contact_phone = self.request.get('cphone').strip()
-            else:
-                venue.venue_contact_phone = None
-            venue.put()
+        v = self.request.get('vkey')
+        d = datetime.datetime.fromtimestamp(
+            time.mktime(time.strptime(self.request.get('play-date'),'%m/%d/%Y'))).date()
+        t = datetime.datetime.fromtimestamp(
+            time.mktime(time.strptime("01/01/1970 %s" % 
+                                      self.request.get('start-time'),'%m/%d/%Y %H:%M'))).time()
+        if v and d and t:
+            venue = models.Venue.get(db.Key(v))
+            g = models.Game(play_date = d,
+                            start_time = t,
+                            venue = venue)
+            g.put()
         else:
             self.error(501,'Venue Name is required but was not provided')
         self.redirect('/admin/venue')
