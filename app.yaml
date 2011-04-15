@@ -15,3 +15,6 @@ handlers:
 
 - url: /images
   static_dir: images
+
+- url: /admin/.*
+  script: SiteAdmin.py
