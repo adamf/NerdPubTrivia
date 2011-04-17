@@ -13,19 +13,10 @@ from google.appengine.ext import db
 from site_db import models
 
 
-class TestHandler(webapp.RequestHandler):
+class DeleteHandler(webapp.RequestHandler):
     def get(self):
-        v = models.Venue(venue_name='ThinkTank',venue_contact_email='vc@thinktankcambridge.com')
-        v.venue_address = 'One Kendall Square, Cambridge, MA 02139 USA'
-        v.put()
-        g = models.Game(play_date = datetime.date(2011,4,6), 
-                        start_time = datetime.time(19), 
-                        venue = v)
-        g.put()
-        print "Hello World"
-        for ven in models.Venue.all().fetch(10):
-            for gam in ven.game_set:
-                print "Game started at %s" % (gam.start_time)
+        db.Model.get(db.Key(self.request.get('edit'))).delete()
+        self.redirect(self.request.environ['HTTP_REFERER'])
 
 class VenueHandler(webapp.RequestHandler):
     def get(self):
@@ -33,7 +24,6 @@ class VenueHandler(webapp.RequestHandler):
         venues = models.Venue.all().fetch(100)
         if not edit_key is None:
             edit_venue = [v for v in venues if (("%s" % v.key()) == edit_key)][0]
-            self.response.out.write('<!-- %s -->' % (edit_venue.venue_name))
         else:
             edit_venue = None
         template_values = { 'venues': venues, 'edit_key': edit_key, 'edit_venue': edit_venue }
@@ -65,7 +55,11 @@ class GameHandler(webapp.RequestHandler):
     def get(self):
         edit_key = self.request.get('edit',None)
         venues = models.Venue.all().fetch(100)
-        template_values = { 'venues': venues, 'edit_key': edit_key }
+        if not edit_key is None:
+            edit_game = models.Game.get(db.Key(edit_key))
+        else:
+            edit_game = None
+        template_values = { 'venues': venues, 'edit_key': edit_key, 'edit_game': edit_game }
         path = os.path.join(os.path.dirname(__file__), 'templates/game.html')
         self.response.out.write(template.render(path,template_values))
         
@@ -83,13 +77,13 @@ class GameHandler(webapp.RequestHandler):
                             venue = venue)
             g.put()
         else:
-            self.error(501,'Venue Name is required but was not provided')
-        self.redirect('/admin/venue')
+            self.error(501,'Venue, Play Date and Start Time are required but was not provided')
+        self.redirect('/admin/game')
 
 def main():
     application = webapp.WSGIApplication([
-            ('/admin/test', TestHandler),
             ('/admin/venue', VenueHandler),
+            ('/admin/delete', DeleteHandler),
             ('/admin/game', GameHandler)
             ],debug=True)
     util.run_wsgi_app(application)

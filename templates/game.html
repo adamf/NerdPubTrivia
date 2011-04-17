@@ -8,9 +8,9 @@
   {% for g in v.game_set %}
   <tr>
     <td>&nbsp;</td>
-    <td><a href="/admin/game?edit_key={{g.key}}">edit</a></td>
-    <td><a href="/admin/game?edit_key={{g.key}}&delete=Y">delete</a></td>
-    <td>{{ g.play_date }}</td>
+    <td><a href="/admin/game?edit={{g.key}}">edit</a></td>
+    <td><a href="/admin/delete?edit={{g.key}}">delete</a></td>
+    <td>{{ g.play_date|date:'m/d/Y' }}</td>
     <td>{{ g.start_time }}</td>
   </tr>
   {% empty %}
@@ -26,37 +26,47 @@
     <tr><th colspan="2" style="text-align: left;">Add a Game</th></tr>
     <tr>
       <td style="text-align: right;">Venue</td>
-      {% if edit_key %}
-      <td><input name="vname_show" type="text" size="40" maxlength="512" 
-		 value="{{ edit_venue.venue_name|default:''}}" disabled="true" />
-        <input type="hidden" name="vname" value="{{edit_venue.venue_name}}" />
-      </td>
-      {% else %}
       <td>
 	<select name="vkey" size="1">
+	  {% if edit_key %}
+	  <option value="{{edit_game.venue.key}}">{{edit_game.venue.venue_name}}</option>
+	  {% else %}
 	  <option value="" selected="selected">None</option>
 	  {% for v in venues %}
 	  <option value="{{v.key}}">{{v.venue_name}}</option>
 	  {% endfor %}
+	  {% endif %}
 	</select>
       </td>
-      {% endif %}
+
     </tr>
+    {% if edit_key %}
     <tr>
       <td style="text-align: right;">Play Date</td>
-      <td><div><p><input name="play-date" type="text" size="40" maxlength="10"
-			 value="{{ edit_venue.venue_address|default:''}}" id="playdate"
-			 /></p></div></td>
+      <td><input name="play-date-show" type="text" size="40" maxlength="10"
+			 value="{{ edit_game.play_date|date:'m/d/Y' }}" disabled="disabled"
+			 />
+	<input name="play-date" type="hidden" value="{{ edit_game.play_date|date:'m/d/Y' }}" />
+      </td>
+      
+    </tr>
+    {% else %}
+    <tr>
+      <td style="text-align: right;">Play Date</td>
+      <td><input name="play-date" type="text" size="40" maxlength="10"
+			 value="{{ edit_.venue_address|default:''}}" id="playdate"
+			 /></td>
     </tr>
     <script>
       $(function() {
       $( "#playdate" ).datepicker();
       });
     </script>
+    {% endif %}
     <tr>
       <td style="text-align: right;">Start Time (HH24:MM)</td>
       <td><input name="start-time" type="text" size="40" maxlength="256"
-		 value="{{ edit_venue.venue_contact_email|default:''}}"
+		 value="{{ edit_game.start_time|default:''}}"
 		 /></td>
     </tr>
     <tr><td colspan="2" style="text-align: right;"><input type="submit" value="Save Game" /></td></tr>
