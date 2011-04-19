@@ -13,8 +13,10 @@ handlers:
   static_files: index.html
   upload: index.html 
 
+- url: /js
+  static_dir: js
+
 - url: /images
   static_dir: images
-
 - url: /admin/.*
   script: SiteAdmin.py

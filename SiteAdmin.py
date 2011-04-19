@@ -86,11 +86,21 @@ class GameHandler(webapp.RequestHandler):
             self.error(501,'Venue Name is required but was not provided')
         self.redirect('/admin/venue')
 
+class PlayHandler(webapp.RequestHandler):
+    def get(self):
+        template_values = {}
+        path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
+        self.response.out.write(template.render(path,template_values))
+
+    def post(self):
+        pass
+
 def main():
     application = webapp.WSGIApplication([
             ('/admin/test', TestHandler),
             ('/admin/venue', VenueHandler),
-            ('/admin/game', GameHandler)
+            ('/admin/game', GameHandler),
+            ('/admin/play', PlayHandler)
             ],debug=True)
     util.run_wsgi_app(application)
 
