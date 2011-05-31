@@ -22,11 +22,16 @@ class Game(db.Model):
         super(self.__class__, self).__init__(*args, **kwargs)
     play_date = db.DateProperty(required=True)
     start_time = db.TimeProperty(required=True)
+    finish_time = db.TimeProperty()
     venue = db.ReferenceProperty(reference_class=Venue,required=True)
-    
+
+class Category(db.Model):
+    category_text = db.StringProperty(required=True)
+
 class Question(db.Model):
     question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio'))
     question_text = db.TextProperty(required=True)
+    category = db.ReferenceProperty(required=True,reference_class=Category)
 
 class QuestionGameMap(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)
@@ -42,11 +47,8 @@ class Answer(db.Model):
     answer_text = db.ListProperty(db.Text,required=True)
 
 class Team(db.Model):
-    def __init__(self, *args, **kwargs):
-        kwargs['key_name'] = kwargs['team_name']
-        super(self.__class__, self).__init__(*args, **kwargs)
-    team_name = db.StringProperty
-    team_notes = db.TextProperty
+    team_name = db.StringProperty(required=True)
+    team_notes = db.TextProperty()
 
 class TeamGameMap(db.Model):
     team = db.ReferenceProperty(required=True,reference_class=Team)
@@ -57,11 +59,3 @@ class bid(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=QuestionGameMap)
     bid_value = db.IntegerProperty(required=True,choices=(1,2,3,4,5,6,7,8,10))
     correct = db.BooleanProperty(required=True,default=False)
-
-
-                                   
-
-
-    
-
-    

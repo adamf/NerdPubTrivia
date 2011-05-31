@@ -1,0 +1,108 @@
+{% include "header.html" %}
+<script>
+    function fnShowHide( iCol )
+    {
+        /* Get the DataTables object again - this is not a recreation, just a get of the object */
+        var oTable = $('#scoreboard').dataTable();
+        
+        var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+        oTable.fnSetColumnVis( iCol, bVis ? false : true );
+    }
+</script>
+
+<style>
+td {
+    margin: 0px;
+    padding: 1px;
+}
+
+.scoreEntry {
+    margin: 0px;
+    padding: 0px;
+    width: 20px;
+    border: 1px solid black;
+}
+
+.wrong {
+    color: red;
+}
+
+.rightEdge {
+    border-right: 2px solid gray;
+    padding-right: 2px;
+
+}
+.leftEdge {
+    padding-left: 2px;
+
+}
+
+
+tr {
+    margin: 0px;
+    padding: 0px;
+    border: 0px;
+}
+
+table {
+    border-spacing: 0px;
+}
+</style>
+<form>
+    <table style="border-width: 2px; border-style: solid; " id="scoreboard"> 
+        <thead>
+            <tr>
+                <th></th>
+                <th colspan="8" onclick="fnShowHide(0);" >Round 1</th>
+                <th colspan="2" onclick="fnShowHide(1);" >Pictures</th>
+                <th colspan="8" onclick="fnShowHide(2);" >Round 2</th>
+                <th colspan="2" onclick="fnShowHide(3);" >Person</th>
+                <th colspan="8" onclick="fnShowHide(4);" >Round 3</th>
+                <th colspan="2" onclick="fnShowHide(5);" >Picture Round 2</th>
+                <th colspan="8" onclick="fnShowHide(6);" >Round 4</th>
+                <th colspan="2" onclick="fnShowHide(7);" >Wager Round</th>
+            </tr>
+            <tr>
+                <th></th> 
+                <th colspan="2">Q1</th>
+                <th colspan="2">Q2</th>
+                <th colspan="2">Q3</th>
+                <th colspan="2">Q4</th>
+            </tr>
+            <tr>
+                <th>Team</th>
+
+                <th>Y</th>
+                <th>N</th>
+
+                <th>Y</th>
+                <th>N</th>
+
+                <th>Y</th>
+                <th>N</th>
+
+                <th>Y</th>
+                <th>N</th>
+
+                
+            </tr>
+        </thead> 
+        <tbody>
+            {% for t in teams %}
+                <tr>
+                    <td>{{t.team_name}}<td>
+                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
+                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
+                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
+                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
+                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
+                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
+                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
+                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</form>
+{% include "footer.html" %}
+

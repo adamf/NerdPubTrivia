@@ -22,6 +22,23 @@ class TestHandler(webapp.RequestHandler):
                         start_time = datetime.time(19), 
                         venue = v)
         g.put()
+
+
+        for i in range(0, 10):
+            t = models.Team(team_name='Test Team ' + str(i))
+            t.put()
+            teamToGame = models.TeamGameMap(team=t, game=g)
+            teamToGame.put()
+
+        for i in range(0, 16):
+            c = models.Category(category_text = 'Category ' + str(i))
+            c.put()
+            q = models.Question(category=c, question_type = 'basic', 
+                    question_text = 'Who is question ' + str(i) + '?')
+            q.put()
+            a = models.Answer(answer_text = [db.Text(str(i) + ', obviously')],question = q)
+            a.put()
+
         print "Hello World"
         for ven in models.Venue.all().fetch(10):
             for gam in ven.game_set:
@@ -65,7 +82,8 @@ class GameHandler(webapp.RequestHandler):
     def get(self):
         edit_key = self.request.get('edit',None)
         venues = models.Venue.all().fetch(100)
-        template_values = { 'venues': venues, 'edit_key': edit_key }
+        games = models.Game.all().fetch(100)
+        template_values = { 'venues': venues, 'edit_key': edit_key, 'games': games }
         path = os.path.join(os.path.dirname(__file__), 'templates/game.html')
         self.response.out.write(template.render(path,template_values))
         
@@ -88,7 +106,21 @@ class GameHandler(webapp.RequestHandler):
 
 class PlayHandler(webapp.RequestHandler):
     def get(self):
-        template_values = {}
+        game_key = self.request.get('game',None)
+        game = db.get(game_key)
+
+        maps = models.TeamGameMap.all().filter('game =', game).fetch(100)
+        teams = []
+        for m in maps:
+            teams.append(m.team)
+
+        maps = models.QuestionGameMap.all().filter('game =', game).fetch(100)
+        questions = []
+        for m in maps:
+            questions.append(m.question)
+
+
+        template_values = {'game': game, 'teams': teams, 'questions': questions}
         path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
         self.response.out.write(template.render(path,template_values))
 
