@@ -36,6 +36,9 @@ class Question(db.Model):
 class QuestionGameMap(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)
     game = db.ReferenceProperty(required=True,reference_class=Game)
+    game_round = db.IntegerProperty(required=True)
+    question_index = db.IntegerProperty(required=True)
+
 
 class Clue(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)

@@ -14,6 +14,83 @@ from site_db import models
 
 
 class TestHandler(webapp.RequestHandler):
+    def createStandardGame(self, game):
+        self.createTeams(10, game)
+        self.createBasicRound(game, 4, 1)
+        self.createBasicRound(game, 4, 2)
+        self.createPictureRound(game, 3)
+        self.createBasicRound(game, 4, 4)
+        self.createBasicRound(game, 4, 5)
+        self.createBioRound(game, 6)
+        self.createBasicRound(game, 4, 7)
+        self.createBasicRound(game, 4, 8)
+        self.createListRound(game, 9)
+        self.createBasicRound(game, 4, 10)
+        self.createBasicRound(game, 4, 11)
+        self.createBasicRound(game, 2, 12)
+
+    def createTeams(self, numTeams, game):
+
+        for i in range(0, numTeams):
+            t = models.Team(team_name='Test Team ' + str(i))
+            t.put()
+            teamToGame = models.TeamGameMap(team=t, game=game)
+            teamToGame.put()
+            print t.team_name
+
+
+    def createBasicRound(self, game, questionCount, gameRound):
+        for i in range(0, questionCount):
+            c = models.Category(category_text = 'Category ' + str(i * gameRound) + ' '  + str(i) )
+            c.put()
+            q = models.Question(category=c, question_type = 'basic', 
+                    question_text = 'Who is question ' + str(i * gameRound) + '?')
+            q.put()
+            a = models.Answer(answer_text = [db.Text(str(i * gameRound) + ', obviously')],question = q)
+            a.put()
+            print c.category_text, q.question_text, a.answer_text
+
+            questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=i)
+            questionToGame.put()
+
+    def createPictureRound(self, game, gameRound):
+        c = models.Category(category_text = 'Picture round ' + str(gameRound))
+        c.put()
+        q = models.Question(category=c, question_type = 'picture', 
+                question_text = 'Identify the nerds')
+        q.put()
+        a = models.Answer(answer_text = [db.Text('bill'), db.Text('frank'), db.Text('jill')],question = q)
+        a.put()
+
+        print c.category_text, q.question_text, a.answer_text
+
+        questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=1)
+        questionToGame.put()
+
+    def createListRound(self, game, gameRound):
+        self.createSpecialRound(game, 'list', gameRound)
+
+    def createPuzzleRound(self, game, gameRound):
+        self.createSpecialRound(game, 'list', gameRound)
+
+    def createBioRound(self, game, gameRound):
+        self.createSpecialRound(game, 'bio', gameRound)
+
+    def createSpecialRound(self, game, roundType, gameRound):
+        c = models.Category(category_text = roundType + ' round ' + str(gameRound))
+        c.put()
+        q = models.Question(category=c, question_type = roundType, 
+                question_text = 'Solve the ' + roundType)
+        q.put()
+        a = models.Answer(answer_text = [db.Text('The Correct Answer')],question = q)
+        a.put()
+
+        print c.category_text, q.question_text, a.answer_text
+
+        questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=1)
+        questionToGame.put()
+
+
     def get(self):
         v = models.Venue(venue_name='ThinkTank',venue_contact_email='vc@thinktankcambridge.com')
         v.venue_address = 'One Kendall Square, Cambridge, MA 02139 USA'
@@ -22,22 +99,7 @@ class TestHandler(webapp.RequestHandler):
                         start_time = datetime.time(19), 
                         venue = v)
         g.put()
-
-
-        for i in range(0, 10):
-            t = models.Team(team_name='Test Team ' + str(i))
-            t.put()
-            teamToGame = models.TeamGameMap(team=t, game=g)
-            teamToGame.put()
-
-        for i in range(0, 16):
-            c = models.Category(category_text = 'Category ' + str(i))
-            c.put()
-            q = models.Question(category=c, question_type = 'basic', 
-                    question_text = 'Who is question ' + str(i) + '?')
-            q.put()
-            a = models.Answer(answer_text = [db.Text(str(i) + ', obviously')],question = q)
-            a.put()
+        self.createStandardGame(g)
 
         print "Hello World"
         for ven in models.Venue.all().fetch(10):
