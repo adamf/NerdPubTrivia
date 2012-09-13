@@ -29,7 +29,7 @@ class BaseHandler(webapp.RequestHandler):
 class DeleteHandler(webapp.RequestHandler):
   def get(self):
     db.Model.get(db.Key(self.request.get('edit'))).delete()
-    self.redirect(self.request.environ['HTTP_REFERER'])
+  self.redirect(self.request.environ['HTTP_REFERER'])
 
 class VenueHandler(BaseHandler):
   def get(self):
@@ -53,7 +53,7 @@ class VenueHandler(BaseHandler):
       venue.put()
     else:
       self.error(501,'Venue Name is required but was not provided')
-      self.redirect('/admin/venue')
+    self.redirect('/admin/venue')
 
 class GameHandler(BaseHandler):
   def get(self):
@@ -66,26 +66,26 @@ class GameHandler(BaseHandler):
     self.render_template('game.html', { 'venues': venues,
                                         'edit_key': edit_key,
                                         'edit_game': edit_game })
-    def post(self):
-      v = self.request.get('vkey')
-      d = datetime.datetime.fromtimestamp(
-          time.mktime(time.strptime(
-              self.request.get('play-date'),'%m/%d/%Y'))).date()
-      t = datetime.datetime.fromtimestamp(
-          time.mktime(time.strptime("01/01/1970 %s" %
-                                    self.request.get('start-time'),
-                                    '%m/%d/%Y %H:%M'))).time()
-      if v and d and t:
-        venue = models.Venue.get(db.Key(v))
-        g = models.Game(play_date = d,
-                        start_time = t,
-                        venue = venue)
-        g.put()
-      else:
-        self.error(501,
-                   ('Venue, Play Date and Start Time '
-                    'are required but was not provided'))
-        self.redirect('/admin/game')
+  def post(self):
+    v = self.request.get('vkey')
+    d = datetime.datetime.fromtimestamp(
+      time.mktime(time.strptime(
+          self.request.get('play-date'),'%m/%d/%Y'))).date()
+    t = datetime.datetime.fromtimestamp(
+      time.mktime(time.strptime("01/01/1970 %s" %
+                                self.request.get('start-time'),
+                                '%m/%d/%Y %H:%M'))).time()
+    if v and d and t:
+      venue = models.Venue.get(db.Key(v))
+      g = models.Game(play_date = d,
+                      start_time = t,
+                      venue = venue)
+      g.put()
+    else:
+      self.error(501,
+                 ('Venue, Play Date and Start Time '
+                  'are required but was not provided'))
+    self.redirect('/admin/game')
 
 def main():
   application = webapp.WSGIApplication([

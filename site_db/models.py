@@ -27,6 +27,7 @@ class Game(db.Model):
 class Question(db.Model):
     question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio'))
     question_text = db.TextProperty(required=True)
+    question_multiplier = db.IntegerProperty(required=True,default=1)
 
 class QuestionGameMap(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)

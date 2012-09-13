@@ -10,6 +10,10 @@ builtins:
 #- datastore_admin: on
 - remote_api: on
 
+libraries:
+- name: django
+  version: latest
+
 handlers:
 - url: /
   static_files: index.html
