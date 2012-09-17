@@ -1,0 +1,24 @@
+{% include "header.html" %}
+  {% for v in venues %}
+  {% if v.key != edit_key  %}
+  <tr>
+    <td><a href="/admin/venue?edit={{ v.key }}">Edit</a></td>
+    <td><a href="/admin/delete?edit={{ v.key }}">Delete</a></td>
+    <td>{{ v.venue_name }}</td>
+    <td>{{ v.venue_address }}</td>
+    <td>{{ v.venue_contact_email }}</td>
+    <td>{{ v.venue_contact_phone }}</td>
+  </tr>
+  {% endif %}
+  {% endfor %}
+      {% if edit_key %}
+      <td><input name="vname_show" type="text" size="40" maxlength="512" 
+		 value="{{ edit_venue.venue_name|default:''}}" disabled="true" />
+        <input type="hidden" name="vname" value="{{edit_venue.venue_name}}" />
+      </td>
+      {% else %}
+      <td><input name="vname" type="text" size="40" maxlength="512"
+		 value="{{ edit_venue.venue_address|default:''}}"
+		 /></td>
+      {% endif %}
+{% include "footer.html" %}
