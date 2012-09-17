@@ -1,16 +1,30 @@
 #!/usr/bin/env python
 import datetime
+import re
+import properties as props
 from google.appengine.ext import db
+from google.appengine.ext import ndb
 
-class Venue(db.Model):
-    def __init__(self, *args, **kwargs):
-        if not kwargs.has_key('key'):
-            kwargs['key_name'] = kwargs['venue_name']
-        super(self.__class__, self).__init__(*args, **kwargs)
-    venue_name = db.StringProperty(required=True)
-    venue_contact_email = db.EmailProperty()
-    venue_contact_phone = db.PhoneNumberProperty()
-    venue_address = db.PostalAddressProperty()
+
+class Venue(ndb.Model):
+    # def __init__(self, *args, **kwargs):
+    #     if not kwargs.has_key('key'):
+    #         kwargs['key_name'] = kwargs['venue_name']
+    #     super(self.__class__, self).__init__(*args, **kwargs)
+    display_name = ndb.StringProperty(required=True)
+    contact_email = props.EmailProperty()
+    public_email = props.EmailProperty()
+    contact_phone = props.PhoneNumberProperty()
+    public_phone = props.PhoneNumberProperty()
+    address = ndb.PostalAddressProperty()
+    website = props.URLProperty()
+
+    def _pre_put_hook(self):
+      if self.id != self.__format_name_for_id(self.display_name):
+        raise ValueError('Venue name can not be changed after assignment.')
+
+    def __format_name_for_id(self):
+      return re.sub(r'[\s\W]','')
 
 class Game(db.Model):
     def __init__(self, *args, **kwargs):
@@ -23,7 +37,7 @@ class Game(db.Model):
     play_date = db.DateProperty(required=True)
     start_time = db.TimeProperty(required=True)
     venue = db.ReferenceProperty(reference_class=Venue,required=True)
-    
+
 class Question(db.Model):
     question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio'))
     question_text = db.TextProperty(required=True)
@@ -58,11 +72,3 @@ class bid(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=QuestionGameMap)
     bid_value = db.IntegerProperty(required=True,choices=(1,2,3,4,5,6,7,8,10))
     correct = db.BooleanProperty(required=True,default=False)
-
-
-                                   
-
-
-    
-
-    

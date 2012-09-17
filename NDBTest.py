@@ -27,11 +27,18 @@ class BaseHandler(webapp.RequestHandler):
     self.response.out.write(template.render(template_path,
                                             template_values))
 
+class Venue(ndb.Model):
+  def __init__(self, *args, **kwargs):
+    super(Venue,self).__init__(*args, **kwargs)
+  venue_name = ndb.StringProperty(required=True)
+
 class TestHandler(BaseHandler):
   def get(self):
+    v=Venue(id='abc')
+    v.venue_name='ABC Place'
+    v.put()
     self.render_template('test.html')
-  def post(self):
-    pass
+
 
 def main():
   application = webapp.WSGIApplication([
