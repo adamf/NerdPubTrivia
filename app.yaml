@@ -24,3 +24,5 @@ handlers:
 
 - url: /admin/.*
   script: SiteAdmin.py
+- url: /test/.*
+  script: NDBTest.py
