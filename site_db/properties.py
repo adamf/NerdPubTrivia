@@ -10,11 +10,11 @@ class PhoneNumberProperty(ndb.StringProperty):
     l=len(s)
     f=s[:1]
     if l==10 and f == '1':
-      raise TypeError('Invalid U.S. Phone Number')
+      raise ValueError('Invalid U.S. Phone Number')
     elif l==11 and f != '1':
-      raise TypeError('Invalid Country Code for U.S. Phone Number')
+      raise ValueError('Invalid Country Code for U.S. Phone Number')
     elif len(s) not in (10,11):
-      raise TypeError('Invalid Phone Number Format')
+      raise ValueError('Invalid Phone Number Format')
 
   def _to_base_type(self, value):
     s = self.__strip(value)
@@ -36,3 +36,31 @@ class PostalAddressProperty(ndb.StringProperty):
 
 class URLProperty(ndb.StringProperty):
   pass
+
+class TwitterProperty(ndb.StringProperty):
+  def __strip(self, value):
+    s=str(value).strip()
+    if s[:1]=='@':
+      s==s[1:]
+
+  def _validate(self, value):
+    s=self.__strip(value):
+    if not re.match(r'^[\w\d_]{2,15}$',value):
+      raise ValueError('Invalid Twitter Handle')
+
+  def _to_base_type(self, value):
+    s=self.__strip(value)
+    if s==value:
+      return None
+    else:
+      return s
+
+  def _from_base_type(self, value):
+    return '@%s' % (value)
+
+class MultiplierProperty(ndb.IntegerProperty):
+  def _validate(self, value):
+    if value < 1 and value != -1:
+      raise ValueError('Multiplier must be positive or be -1')
+
+
