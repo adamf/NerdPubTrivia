@@ -41,7 +41,7 @@ class TwitterProperty(ndb.StringProperty):
   def __strip(self, value):
     s=str(value).strip()
     if s[:1]=='@':
-      s==s[1:]
+      s=s[1:]
 
   def _validate(self, value):
     s=self.__strip(value):
@@ -62,5 +62,3 @@ class MultiplierProperty(ndb.IntegerProperty):
   def _validate(self, value):
     if value < 1 and value != -1:
       raise ValueError('Multiplier must be positive or be -1')
-
-
