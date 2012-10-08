@@ -27,7 +27,7 @@ class TestHandler(webapp.RequestHandler):
         self.createListRound(game, 9)
         self.createBasicRound(game, 4, 10)
         self.createBasicRound(game, 4, 11)
-        self.createBasicRound(game, 2, 12)
+        self.createWagerRound(game, 2, 12)
 
     def createTeams(self, numTeams, game):
 
@@ -45,6 +45,20 @@ class TestHandler(webapp.RequestHandler):
             c.put()
             q = models.Question(category=c, question_type = 'basic', 
                     question_text = 'Who is question ' + str(i * gameRound) + '?')
+            q.put()
+            a = models.Answer(answer_text = [db.Text(str(i * gameRound) + ', obviously')],question = q)
+            a.put()
+            print c.category_text, q.question_text, a.answer_text
+
+            questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=i)
+            questionToGame.put()
+
+    def createWagerRound(self, game, questionCount, gameRound):
+        for i in range(0, questionCount):
+            c = models.Category(category_text = 'Category ' + str(i * gameRound) + ' '  + str(i) )
+            c.put()
+            q = models.Question(category=c, question_type = 'wager', 
+                    question_text = 'Name four of the ' + str(i * gameRound) + ' foos?')
             q.put()
             a = models.Answer(answer_text = [db.Text(str(i * gameRound) + ', obviously')],question = q)
             a.put()
@@ -92,11 +106,11 @@ class TestHandler(webapp.RequestHandler):
 
 
     def get(self):
-        v = models.Venue(venue_name='ThinkTank',venue_contact_email='vc@thinktankcambridge.com')
-        v.venue_address = 'One Kendall Square, Cambridge, MA 02139 USA'
+        v = models.Venue(venue_name='Fake Trivia Bar',venue_contact_email='fakebar@example.com')
+        v.venue_address = 'One Fake Square, Fake, MA 02111 USA'
         v.put()
-        g = models.Game(play_date = datetime.date(2011,4,6), 
-                        start_time = datetime.time(19), 
+        g = models.Game(play_date = datetime.date(1900,1,1), 
+                        start_time = datetime.time(10), 
                         venue = v)
         g.put()
         self.createStandardGame(g)
@@ -179,10 +193,16 @@ class PlayHandler(webapp.RequestHandler):
         maps = models.QuestionGameMap.all().filter('game =', game).fetch(100)
         questions = []
         for m in maps:
-            questions.append(m.question)
+            questions.append({'question': m.question, 'round': m.game_round, 'index': m.question_index})
+
+        maps = models.Bid.all().filter('game =', game).fetch(100)
+        bids = {}
+        for m in maps:
+            bids[(m.team.team_name, m.question.question_index)] = {'value': m.bid_value, 'correct': m.correct}
+        
 
 
-        template_values = {'game': game, 'teams': teams, 'questions': questions}
+        template_values = {'game': game, 'teams': teams, 'questions': questions, 'bids': bids}
         path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
         self.response.out.write(template.render(path,template_values))
 

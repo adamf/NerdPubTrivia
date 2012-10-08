@@ -29,7 +29,7 @@ class Category(db.Model):
     category_text = db.StringProperty(required=True)
 
 class Question(db.Model):
-    question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio'))
+    question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio', 'wager'))
     question_text = db.TextProperty(required=True)
     category = db.ReferenceProperty(required=True,reference_class=Category)
 
@@ -38,7 +38,6 @@ class QuestionGameMap(db.Model):
     game = db.ReferenceProperty(required=True,reference_class=Game)
     game_round = db.IntegerProperty(required=True)
     question_index = db.IntegerProperty(required=True)
-
 
 class Clue(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)
@@ -57,8 +56,9 @@ class TeamGameMap(db.Model):
     team = db.ReferenceProperty(required=True,reference_class=Team)
     game = db.ReferenceProperty(required=True,reference_class=Game)
 
-class bid(db.Model):
-    team_instance = db.ReferenceProperty(required=True,reference_class=TeamGameMap)
+class Bid(db.Model):
+    game = db.ReferenceProperty(required=True,reference_class=Game)
+    team = db.ReferenceProperty(required=True,reference_class=Team)
     question = db.ReferenceProperty(required=True,reference_class=QuestionGameMap)
-    bid_value = db.IntegerProperty(required=True,choices=(1,2,3,4,5,6,7,8,10))
+    bid_value = db.IntegerProperty(required=True)
     correct = db.BooleanProperty(required=True,default=False)

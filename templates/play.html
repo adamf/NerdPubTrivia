@@ -1,91 +1,48 @@
 {% include "header.html" %}
 <script>
-    function fnShowHide( iCol )
-    {
-        /* Get the DataTables object again - this is not a recreation, just a get of the object */
-        var oTable = $('#scoreboard').dataTable();
-        
-        var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
-        oTable.fnSetColumnVis( iCol, bVis ? false : true );
-    }
+    $(document).ready(function() {
+        var oTable = $('#scoreboard').dataTable({
+            "sScrollX": "100%",
+            "bSort": false,
+            "bFilter": false,
+            "bScrollCollapse": true,
+            "aoColumnDefs": [ { "sWidth": "100px", "aTargets": ["questionColumn"] } ]
+        });
+        new FixedColumns( oTable, { "iLeftWidth": 150 } );
+
+    });
 </script>
-
 <style>
-td {
-    margin: 0px;
-    padding: 1px;
-}
-
-.scoreEntry {
-    margin: 0px;
-    padding: 0px;
-    width: 20px;
-    border: 1px solid black;
-}
-
-.wrong {
-    color: red;
-}
-
-.rightEdge {
-    border-right: 2px solid gray;
-    padding-right: 2px;
-
-}
-.leftEdge {
-    padding-left: 2px;
-
-}
-
-
-tr {
-    margin: 0px;
-    padding: 0px;
-    border: 0px;
-}
-
-table {
-    border-spacing: 0px;
+.table {
+    max-width: 700px;
 }
 </style>
-<form>
-    <table style="border-width: 2px; border-style: solid; " id="scoreboard"> 
+
+<div id="tableDiv">
+    <table border="0" cellpadding="0" cellspacing="0" id="scoreboard"> 
         <thead>
             <tr>
-                <th></th> 
+                <th ></th> 
                 {% for q in questions %}
-                    <th colspan="2">{{ q.question_text }}</th>
+                    <th  class="questionColumn">{{ q.question.question_text }}</th>
                 {% endfor %}
-            </tr>
-            <tr>
-                <th>Team</th>
-                {% for q in questions %}
-                    <th>Y</th>
-                    <th>N</th>
-                {% endfor %}
-                
             </tr>
         </thead> 
         <tbody>
             {% for t in teams %}
-                <tr>
-                    <td>{{t.team_name}}<td>
-                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
-                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
-                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
-                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
-                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
-                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
-                    <td class="leftEdge"><input type="text" maxlength="2" size="2" class="scoreEntry" value="0"/> </td>
-                    <td class="rightEdge"><input type="text" maxlength="2" size="2" class="scoreEntry wrong" value="0"/> </td>
+                <tr id="{{t.team_name}}">
+                    <td >{{t.team_name}}</td>
+                    {% for q in questions %}
+                        <td >
+                            <input type="text" maxlength="2" name="wager_{{q.round}}_{{q.index}}" size="2" class="scoreEntry" value="0"/> 
+                            <input type="checkbox" name="iscorrect_{{q.round}}_{{q.index}}" value="no">
+                        </td>
+                    {% endfor %} 
                 </tr>
             {% endfor %}
         </tbody>
     </table>
-    <input type="button" id="prev" name="prev" /><label for="prev">Previous Round</label>
-    <input type="button" id="next" name="next" /><label for="next">Previous Round</label>
-</form>
+</div>
 
-{{ questions }}
 {% include "footer.html" %}
 
