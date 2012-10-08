@@ -1,5 +1,22 @@
 {% include "header.html" %}
 <script>
+    function secondsSinceEpochUTC() {
+        dateObj = new Date();
+        return Math.floor(dateObj.getTime() / 1000) - (dateObj.getTimezoneOffset() * 60);
+    }
+
+    function getBids(since) {
+        var game_key = $('#scoreboard').attr("game_key");
+        $.getJSON('/admin/play/guess?game=' + game_key + '&changed_since=' + since, function(data) {
+                $.each(data, function(idx, val) {
+                        var targetNode = $('[team_key="'  + data[idx].team_key + '"] [question_key="' + data[idx].question_key + '"]')[0];
+                        $(targetNode).children('.wagerAmount')[0].value = data[idx].wager;
+                        $(targetNode).children('.correctCheck')[0].checked = data[idx].correct;
+                    });
+                
+            });
+    }
+
     $(document).ready(function() {
         var oTable = $('#scoreboard').dataTable({
             "sScrollX": "100%",
@@ -10,20 +27,23 @@
         });
         new FixedColumns( oTable, { "iLeftWidth": 150 } );
 
-    $('.wagerInput').change(function(obj) {
-        // post the new values
-        var targetNode = obj.currentTarget.parentNode;
-        var game_key = $('#scoreboard').attr("game_key");
-        var question_key = $(targetNode).attr("question_key");
-        var team_key = $(targetNode.parentNode).attr("team_key");
-        var wager = $(targetNode).children('.wagerAmount')[0].value;
-        var correct = $(targetNode).children('.correctCheck')[0].checked;
-        /* only post if there's a value */
-        if (wager.length  != 0) {
-            $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
-        }
 
-      });
+        $('.wagerInput').change(function(obj) {
+            // post the new values
+            var targetNode = obj.currentTarget.parentNode;
+            var game_key = $('#scoreboard').attr("game_key");
+            var question_key = $(targetNode).attr("question_key");
+            var team_key = $(targetNode.parentNode).attr("team_key");
+            var wager = $(targetNode).children('.wagerAmount')[0].value;
+            var correct = $(targetNode).children('.correctCheck')[0].checked;
+            /* only post if there's a value */
+            if (wager.length  != 0) {
+                $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
+            }
+
+        });
+
+        getBids(0); // get all the bids since forever, it's the first page load
     });
 
 </script>
@@ -58,9 +78,6 @@
         </tbody>
     </table>
 </div>
-
-{{ bids }}
-{{ questions }}
 
 {% include "footer.html" %}
 

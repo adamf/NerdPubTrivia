@@ -205,7 +205,10 @@ class PlayHandler(webapp2.RequestHandler):
         maps = models.Bid.all().filter('game =', game).fetch(100)
         bids = {}
         for m in maps:
-            bids[(m.team.team_name, m.question.question_index)] = {'value': m.bid_value, 'correct': m.correct}
+            team_key = str(m.team.key())
+            question_key = str(m.question.key())
+            bid_key = str(m.key())
+            bids[(team_key, question_key)] = {'team_key': team_key, 'question_key': question_key, 'value': m.bid_value, 'correct': m.correct, 'key': bid_key}
         
 
 
@@ -219,6 +222,29 @@ class PlayHandler(webapp2.RequestHandler):
             self.response.out.write(template.render(path,template_values))
 
 class GuessHandler(webapp2.RequestHandler):
+    def get(self):
+        changed_since = self.request.get('changed_since', None)
+        game_key = self.request.get('game')
+        game = db.get(game_key)
+        # search by seconds since the epoch to avoid time bullshit
+        if not changed_since:
+            changed_since = 0;
+   
+        logging.info(changed_since)
+        #maps = models.Bid.all().filter('game =', game).filter("modify_time > ", changed_since).fetch(1000)
+        maps = models.Bid.all().filter('game =', game).fetch(1000)
+
+        bids = []
+        for m in maps:
+            team_key = str(m.team.key())
+            question_key = str(m.question.key())
+            bid_key = str(m.key())
+            bids.append({ 'bid_key': bid_key, 'question_key': question_key, 'team_key': team_key,
+                          'modify_time': m.modify_time, 'wager': m.bid_value, 'correct': m.correct})
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(bids, cls=gqlencoder.GqlEncoder))
+
     def post(self):
         game_key = self.request.get('game')
         question_map_key = self.request.get('question') 
@@ -245,6 +271,7 @@ class GuessHandler(webapp2.RequestHandler):
         if bid.bid_value != wager or bid.correct != correct:
             bid.bid_value = wager
             bid.correct = correct
+            bid.modify_time = int(time.time())
             bid.put()
 
 

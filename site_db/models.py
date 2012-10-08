@@ -70,3 +70,4 @@ class Bid(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=QuestionGameMap)
     bid_value = db.IntegerProperty(required=True)
     correct = db.BooleanProperty(required=True,default=False)
+    modify_time = db.IntegerProperty(default=1)
