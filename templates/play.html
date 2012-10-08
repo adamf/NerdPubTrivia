@@ -10,7 +10,22 @@
         });
         new FixedColumns( oTable, { "iLeftWidth": 150 } );
 
+    $('.wagerInput').change(function(obj) {
+        // post the new values
+        var targetNode = obj.currentTarget.parentNode;
+        var game_key = $('#scoreboard').attr("game_key");
+        var question_key = $(targetNode).attr("question_key");
+        var team_key = $(targetNode.parentNode).attr("team_key");
+        var wager = $(targetNode).children('.wagerAmount')[0].value;
+        var correct = $(targetNode).children('.correctCheck')[0].checked;
+        /* only post if there's a value */
+        if (wager.length  != 0) {
+            $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
+        }
+
+      });
     });
+
 </script>
 <style>
 .table {
@@ -19,7 +34,7 @@
 </style>
 
 <div id="tableDiv">
-    <table border="0" cellpadding="0" cellspacing="0" id="scoreboard"> 
+    <table border="0" cellpadding="0" cellspacing="0" id="scoreboard" game_key="{{game_key}}"> 
         <thead>
             <tr>
                 <th ></th> 
@@ -30,12 +45,12 @@
         </thead> 
         <tbody>
             {% for t in teams %}
-                <tr id="{{t.team_name}}">
+                <tr id="{{t.team_name}}" team_key={{t.key}}>
                     <td >{{t.team_name}}</td>
                     {% for q in questions %}
-                        <td >
-                            <input type="text" maxlength="2" name="wager_{{q.round}}_{{q.index}}" size="2" class="scoreEntry" value="0"/> 
-                            <input type="checkbox" name="iscorrect_{{q.round}}_{{q.index}}" value="no">
+                        <td question_key="{{q.key}}"> 
+                            <input class="wagerInput wagerAmount" type="text" maxlength="2" size="2" /> 
+                            <input class="wagerInput correctCheck" type="checkbox"/>
                         </td>
                     {% endfor %} 
                 </tr>
@@ -43,6 +58,9 @@
         </tbody>
     </table>
 </div>
+
+{{ bids }}
+{{ questions }}
 
 {% include "footer.html" %}
 

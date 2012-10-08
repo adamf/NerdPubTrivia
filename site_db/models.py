@@ -57,6 +57,14 @@ class TeamGameMap(db.Model):
     game = db.ReferenceProperty(required=True,reference_class=Game)
 
 class Bid(db.Model):
+    def __init__(self, *args, **kwargs):
+        if not kwargs.has_key('key'):
+            g = kwargs['game']
+            t = kwargs['team']
+            q = kwargs['question']
+            k = "%s-%s-%s" % (g,t,q)
+            kwargs['key_name'] = k
+        super(self.__class__, self).__init__(*args, **kwargs)
     game = db.ReferenceProperty(required=True,reference_class=Game)
     team = db.ReferenceProperty(required=True,reference_class=Team)
     question = db.ReferenceProperty(required=True,reference_class=QuestionGameMap)

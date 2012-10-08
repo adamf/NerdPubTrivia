@@ -1,12 +1,16 @@
 application: nerdpubtrivia
 version: 1
-runtime: python
+runtime: python27
 api_version: 1
+threadsafe: true
 
 builtins:
 - appstats: on
-- datastore_admin: on
 - remote_api: on
+
+libraries:
+- name: django
+  version: "1.2"
 
 handlers:
 - url: /
@@ -19,4 +23,4 @@ handlers:
 - url: /images
   static_dir: images
 - url: /admin/.*
-  script: SiteAdmin.py
+  script: SiteAdmin.app

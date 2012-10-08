@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-#
+
+import logging
 import datetime
 import time
 import os
-from google.appengine.ext import webapp
+import webapp2
 from google.appengine.ext.webapp import util
 from google.appengine.dist import use_library
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -11,9 +12,11 @@ use_library('django', '1.2')
 from google.appengine.ext.webapp import template
 from google.appengine.ext import db
 from site_db import models
+import json
+import gqlencoder
 
 
-class TestHandler(webapp.RequestHandler):
+class TestHandler(webapp2.RequestHandler):
     def createStandardGame(self, game):
         self.createTeams(10, game)
         self.createBasicRound(game, 4, 1)
@@ -109,7 +112,7 @@ class TestHandler(webapp.RequestHandler):
         v = models.Venue(venue_name='Fake Trivia Bar',venue_contact_email='fakebar@example.com')
         v.venue_address = 'One Fake Square, Fake, MA 02111 USA'
         v.put()
-        g = models.Game(play_date = datetime.date(1900,1,1), 
+        g = models.Game(play_date = datetime.date(1990,1,1), 
                         start_time = datetime.time(10), 
                         venue = v)
         g.put()
@@ -120,7 +123,7 @@ class TestHandler(webapp.RequestHandler):
             for gam in ven.game_set:
                 print "Game started at %s" % (gam.start_time)
 
-class VenueHandler(webapp.RequestHandler):
+class VenueHandler(webapp2.RequestHandler):
     def get(self):
         edit_key = self.request.get('edit',None)
         venues = models.Venue.all().fetch(100)
@@ -154,7 +157,7 @@ class VenueHandler(webapp.RequestHandler):
             self.error(501,'Venue Name is required but was not provided')
         self.redirect('/admin/venue')
 
-class GameHandler(webapp.RequestHandler):
+class GameHandler(webapp2.RequestHandler):
     def get(self):
         edit_key = self.request.get('edit',None)
         venues = models.Venue.all().fetch(100)
@@ -180,20 +183,24 @@ class GameHandler(webapp.RequestHandler):
             self.error(501,'Venue Name is required but was not provided')
         self.redirect('/admin/venue')
 
-class PlayHandler(webapp.RequestHandler):
+class PlayHandler(webapp2.RequestHandler):
     def get(self):
+        use_json = self.request.get('json',None)
         game_key = self.request.get('game',None)
         game = db.get(game_key)
 
         maps = models.TeamGameMap.all().filter('game =', game).fetch(100)
         teams = []
         for m in maps:
-            teams.append(m.team)
+            team = db.to_dict(m.team)
+            team["key"] = m.team.key()
+            teams.append(team)
 
         maps = models.QuestionGameMap.all().filter('game =', game).fetch(100)
         questions = []
         for m in maps:
-            questions.append({'question': m.question, 'round': m.game_round, 'index': m.question_index})
+            questions.append({'question': db.to_dict(m.question), 'round': m.game_round, 
+                              'index': m.question_index, 'key': m.key()})
 
         maps = models.Bid.all().filter('game =', game).fetch(100)
         bids = {}
@@ -202,22 +209,49 @@ class PlayHandler(webapp.RequestHandler):
         
 
 
-        template_values = {'game': game, 'teams': teams, 'questions': questions, 'bids': bids}
-        path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
-        self.response.out.write(template.render(path,template_values))
+        template_values = {'game_key': game_key, 'game': db.to_dict(game), 'teams': teams, 'questions': questions, 'bids': bids}
 
+        if use_json:
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(template_values, cls=gqlencoder.GqlEncoder))
+        else:
+            path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
+            self.response.out.write(template.render(path,template_values))
+
+class GuessHandler(webapp2.RequestHandler):
     def post(self):
-        pass
+        game_key = self.request.get('game')
+        question_map_key = self.request.get('question') 
+        team_key = self.request.get('team')
+        wager = int(self.request.get('wager'))
+        correct = self.request.get('correct')
+        if (correct == "false"):
+            correct = False
+        else:
+            correct = True
 
-def main():
-    application = webapp.WSGIApplication([
-            ('/admin/test', TestHandler),
-            ('/admin/venue', VenueHandler),
-            ('/admin/game', GameHandler),
-            ('/admin/play', PlayHandler)
-            ],debug=True)
-    util.run_wsgi_app(application)
+        logging.info(correct)
+
+        team = db.Key(team_key)
+        question = db.Key(question_map_key)
+        game = db.Key(game_key)
+
+        bid_key = "%s-%s-%s" % (game_key,team_key,question_map_key)
+        logging.info("correct %s wager %s bid key %s" % (correct, wager, bid_key)) 
+
+        bid = models.Bid.get_or_insert(bid_key, team=team, 
+                        question=question, game=game, correct=correct, bid_value=wager)
+
+        if bid.bid_value != wager or bid.correct != correct:
+            bid.bid_value = wager
+            bid.correct = correct
+            bid.put()
 
 
-if __name__ == '__main__':
-    main()
+app = webapp2.WSGIApplication([
+        ('/admin/test', TestHandler),
+        ('/admin/venue', VenueHandler),
+        ('/admin/game', GameHandler),
+        ('/admin/play', PlayHandler),
+        ('/admin/play/guess', GuessHandler)
+        ],debug=True)
