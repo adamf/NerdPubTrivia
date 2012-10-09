@@ -20,17 +20,13 @@ class TestHandler(webapp2.RequestHandler):
     def createStandardGame(self, game):
         self.createTeams(10, game)
         self.createBasicRound(game, 4, 1)
-        self.createBasicRound(game, 4, 2)
-        self.createPictureRound(game, 3)
-        self.createBasicRound(game, 4, 4)
+        self.createPictureRound(game, 2)
+        self.createBasicRound(game, 4, 3)
+        self.createBioRound(game, 4)
         self.createBasicRound(game, 4, 5)
-        self.createBioRound(game, 6)
+        self.createListRound(game, 6)
         self.createBasicRound(game, 4, 7)
-        self.createBasicRound(game, 4, 8)
-        self.createListRound(game, 9)
-        self.createBasicRound(game, 4, 10)
-        self.createBasicRound(game, 4, 11)
-        self.createWagerRound(game, 2, 12)
+        self.createWagerRound(game, 2, 8)
 
     def createTeams(self, numTeams, game):
 
@@ -202,7 +198,7 @@ class PlayHandler(webapp2.RequestHandler):
             questions.append({'question': db.to_dict(m.question), 'round': m.game_round, 
                               'index': m.question_index, 'key': m.key()})
 
-        maps = models.Bid.all().filter('game =', game).fetch(100)
+        maps = models.Bid.all().filter('game =', game).fetch(1000)
         bids = {}
         for m in maps:
             team_key = str(m.team.key())
@@ -221,9 +217,35 @@ class PlayHandler(webapp2.RequestHandler):
             path = os.path.join(os.path.dirname(__file__), 'templates/play.html')
             self.response.out.write(template.render(path,template_values))
 
+class ScoreHandler(webapp2.RequestHandler):
+    def get(self):
+        game_key = self.request.get('game')
+        game = db.get(game_key)
+        teams = models.TeamGameMap.all().filter('game =', game).fetch(1000)
+        maps = models.Bid.all().filter('game =', game).fetch(1000)
+
+        score = {}
+        for t in teams:
+            score[t.team.team_name] = 0
+
+        for m in maps:
+            q_type = m.question.question.question_type
+            if m.correct:
+                if q_type == 'basic' or q_type == 'bio' or q_type == 'wager':
+                    score[m.team.team_name] += m.bid_value
+                else:
+                    score[m.team.team_name] += (m.bid_value * 2)
+            else:
+                if q_type == 'wager':
+                    score[m.team.team_name] -= (m.bid_value / 2)
+            
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(score, cls=gqlencoder.GqlEncoder))
+
+
 class GuessHandler(webapp2.RequestHandler):
     def get(self):
-        changed_since = self.request.get('changed_since', None)
+        changed_since = int(self.request.get('changed_since', None))
         game_key = self.request.get('game')
         game = db.get(game_key)
         # search by seconds since the epoch to avoid time bullshit
@@ -231,8 +253,8 @@ class GuessHandler(webapp2.RequestHandler):
             changed_since = 0;
    
         logging.info(changed_since)
-        #maps = models.Bid.all().filter('game =', game).filter("modify_time > ", changed_since).fetch(1000)
-        maps = models.Bid.all().filter('game =', game).fetch(1000)
+        maps = models.Bid.all().filter('game =', game).filter("modify_time > ", changed_since).fetch(1000)
+        #maps = models.Bid.all().filter('game =', game).fetch(1000)
 
         bids = []
         for m in maps:
@@ -271,7 +293,8 @@ class GuessHandler(webapp2.RequestHandler):
         if bid.bid_value != wager or bid.correct != correct:
             bid.bid_value = wager
             bid.correct = correct
-            bid.modify_time = int(time.time())
+            now = datetime.datetime.utcnow()
+            bid.modify_time = int(now.strftime('%s'))
             bid.put()
 
 
@@ -280,5 +303,6 @@ app = webapp2.WSGIApplication([
         ('/admin/venue', VenueHandler),
         ('/admin/game', GameHandler),
         ('/admin/play', PlayHandler),
-        ('/admin/play/guess', GuessHandler)
+        ('/admin/play/guess', GuessHandler),
+        ('/admin/play/score', ScoreHandler)
         ],debug=True)
