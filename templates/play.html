@@ -6,29 +6,37 @@
         return Math.floor(dateObj.getTime() / 1000);
     }
 
+
+    function setScore(teamName, newScore) {
+        var targetNode = $('#scoreboard [team_name="' + teamName +'"]');
+        $(targetNode).children('.teamScore')[0].innerHTML = newScore;
+    }
+
+    function setBid(team_key, question_key, wager, correct) {
+        var targetNode = $('[team_key="'  + team_key + '"] [question_key="' + question_key + '"]')[0];
+        $(targetNode).children('.wagerAmount')[0].value = wager;
+        $(targetNode).children('.correctCheck')[0].checked = correct;
+
+    }
+
     function getScores() {
-        var game_key = $('#leaderboard').attr("game_key");
+        var game_key = $('#scoreboard').attr("game_key");
         $.getJSON('/admin/play/score?game=' + game_key, function(data) {
                 $.each(data, function(idx, val) {
-                        var targetNode = $('#leaderboard [team_name="' + idx +'"]');
-                        $(targetNode).children('.teamScore')[0].innerHTML = val;
-                        //
-
+                        setScore(idx, val);
                     });
                 
             });
     }
 
     function getBids(since) {
-        var game_key = $('#scoreboard').attr("game_key");
+        var game_key = $('#scoreentryform').attr("game_key");
         $.getJSON('/admin/play/guess?game=' + game_key + '&changed_since=' + since, function(data) {
                 if (data.length != 0) {
                     lastBidCheckTime = secondsSinceEpochUTC();
                 }
                 $.each(data, function(idx, val) {
-                        var targetNode = $('[team_key="'  + data[idx].team_key + '"] [question_key="' + data[idx].question_key + '"]')[0];
-                        $(targetNode).children('.wagerAmount')[0].value = data[idx].wager;
-                        $(targetNode).children('.correctCheck')[0].checked = data[idx].correct;
+                        setBid(data[idx].team_key, data[idx].question_key, data[idx].wager, data[idx].correct);
                     });
                 
             });
@@ -36,16 +44,16 @@
 
     function refreshBids() {
         getBids(lastBidCheckTime);
-        setTimeout(refreshBids, 20000);
+        setTimeout(refreshBids, 10000);
     }
 
     function refreshScores() {
         getScores();
-        setTimeout(refreshScores, 20000);
+        setTimeout(refreshScores, 10000);
     }
 
     $(document).ready(function() {
-        var oTable = $('#scoreboard').dataTable({
+        var oTable = $('#scoreentryform').dataTable({
             "sScrollX": "100%",
             "bSort": false,
             "bFilter": false,
@@ -54,7 +62,7 @@
         });
         new FixedColumns( oTable, { "iLeftWidth": 150 } );
 
-        var scoreTable = $('#leaderboard').dataTable({
+        var scoreTable = $('#scoreboard').dataTable({
             "sScrollX": "100%",
             "bSort": false,
             "bFilter": false,
@@ -65,15 +73,19 @@
         $('.wagerInput').change(function(obj) {
             // post the new values
             var targetNode = obj.currentTarget.parentNode;
-            var game_key = $('#scoreboard').attr("game_key");
+            var game_key = $('#scoreentryform').attr("game_key");
             var question_key = $(targetNode).attr("question_key");
             var team_key = $(targetNode.parentNode).attr("team_key");
             var wager = $(targetNode).children('.wagerAmount')[0].value;
             var correct = $(targetNode).children('.correctCheck')[0].checked;
-            /* only post if there's a value */
-            if (wager.length  != 0) {
-                $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
+
+            if (wager === "") {
+                setBid(team_key, question_key, wager, false);
             }
+
+            // post even if there's no value in wager; we need to be able to reset questions to "unanswered"
+            $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
+            getScores();
 
         });
 
@@ -89,7 +101,7 @@
 </style>
 
 <div id="tableDiv">
-    <table border="0" cellpadding="0" cellspacing="0" id="scoreboard" game_key="{{game_key}}"> 
+    <table border="0" cellpadding="0" cellspacing="0" id="scoreentryform" game_key="{{game_key}}"> 
         <thead>
             <tr>
                 <th ></th> 
@@ -115,7 +127,7 @@
 </div>
 <br>
 
-<table border="0" cellpadding="0" cellspacing="0" id="leaderboard" game_key="{{game_key}}"> 
+<table border="0" cellpadding="0" cellspacing="0" id="scoreboard" game_key="{{game_key}}"> 
         <thead>
             <tr>
                 <th>Team</th> 

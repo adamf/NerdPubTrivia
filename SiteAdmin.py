@@ -230,6 +230,7 @@ class ScoreHandler(webapp2.RequestHandler):
 
         for m in maps:
             q_type = m.question.question.question_type
+            logging.info("team: " + m.team.team_name + " q: " + q_type + " c: " + str(m.correct))
             if m.correct:
                 if q_type == 'basic' or q_type == 'bio' or q_type == 'wager':
                     score[m.team.team_name] += m.bid_value
@@ -271,12 +272,13 @@ class GuessHandler(webapp2.RequestHandler):
         game_key = self.request.get('game')
         question_map_key = self.request.get('question') 
         team_key = self.request.get('team')
-        wager = int(self.request.get('wager'))
+        wager = self.request.get('wager')
         correct = self.request.get('correct')
         if (correct == "false"):
             correct = False
         else:
             correct = True
+
 
         logging.info(correct)
 
@@ -284,18 +286,25 @@ class GuessHandler(webapp2.RequestHandler):
         question = db.Key(question_map_key)
         game = db.Key(game_key)
 
-        bid_key = "%s-%s-%s" % (game_key,team_key,question_map_key)
+        bid_key = "%s-%s-%s" % (game_key, team_key, question_map_key)
         logging.info("correct %s wager %s bid key %s" % (correct, wager, bid_key)) 
 
-        bid = models.Bid.get_or_insert(bid_key, team=team, 
-                        question=question, game=game, correct=correct, bid_value=wager)
+        if wager == "":
+            bid = models.Bid.get_by_key_name(bid_key)
+            logging.info(bid)
+            if bid:
+                bid.delete()
+        else:
+            wager = int(wager)
+            bid = models.Bid.get_or_insert(bid_key, team=team, 
+                            question=question, game=game, correct=correct, bid_value=wager)
 
-        if bid.bid_value != wager or bid.correct != correct:
-            bid.bid_value = wager
-            bid.correct = correct
-            now = datetime.datetime.utcnow()
-            bid.modify_time = int(now.strftime('%s'))
-            bid.put()
+            if bid.bid_value != wager or bid.correct != correct:
+                bid.bid_value = wager
+                bid.correct = correct
+                now = datetime.datetime.utcnow()
+                bid.modify_time = int(now.strftime('%s'))
+                bid.put()
 
 
 app = webapp2.WSGIApplication([
