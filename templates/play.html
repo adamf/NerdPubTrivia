@@ -7,8 +7,10 @@
     }
 
 
-    function setScore(teamName, newScore) {
-        var targetNode = $('#scoreboard [team_name="' + teamName +'"]');
+    function setScore(place, teamName, newScore) {
+        var targetNode = $('#scoreboard [place="' + place +'"]');
+        
+        $(targetNode).children('.teamName')[0].innerHTML = teamName;
         $(targetNode).children('.teamScore')[0].innerHTML = newScore;
     }
 
@@ -23,7 +25,7 @@
         var game_key = $('#scoreboard').attr("game_key");
         $.getJSON('/admin/play/score?game=' + game_key, function(data) {
                 $.each(data, function(idx, val) {
-                        setScore(idx, val);
+                        setScore(idx, data[idx].team_name, data[idx].score);
                     });
                 
             });
@@ -66,6 +68,7 @@
             "sScrollX": "100%",
             "bSort": false,
             "bFilter": false,
+            "bAutoWidth": true,
             "bScrollCollapse": true,
         });
 
@@ -82,7 +85,6 @@
             if (wager === "") {
                 setBid(team_key, question_key, wager, false);
             }
-
             // post even if there's no value in wager; we need to be able to reset questions to "unanswered"
             $.post('/admin/play/guess', { 'game': game_key, 'question': question_key, 'team': team_key, 'wager': wager, 'correct': correct });
             getScores();
@@ -136,8 +138,8 @@
         </thead> 
     <tbody>
         {% for t in teams %}
-            <tr team_name="{{t.team_name}}" >
-                <td>{{t.team_name}}</td>
+            <tr place="{{forloop.counter0}}">
+                <td class="teamName">{{t.team_name}}</td>
                 <td class="teamScore">0</td>
             </tr>
         {% endfor %}

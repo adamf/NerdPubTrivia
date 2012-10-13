@@ -230,7 +230,6 @@ class ScoreHandler(webapp2.RequestHandler):
 
         for m in maps:
             q_type = m.question.question.question_type
-            logging.info("team: " + m.team.team_name + " q: " + q_type + " c: " + str(m.correct))
             if m.correct:
                 if q_type == 'basic' or q_type == 'bio' or q_type == 'wager':
                     score[m.team.team_name] += m.bid_value
@@ -239,9 +238,17 @@ class ScoreHandler(webapp2.RequestHandler):
             else:
                 if q_type == 'wager':
                     score[m.team.team_name] -= (m.bid_value / 2)
-            
+
+
+        score_list = []
+        for team in score:
+            score_list.append({"team_name": team, "score": score[team]})
+
+        sorted_scores = sorted(score_list, key=lambda k: k['score']) 
+        sorted_scores.reverse()
+
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(score, cls=gqlencoder.GqlEncoder))
+        self.response.out.write(json.dumps(sorted_scores, cls=gqlencoder.GqlEncoder))
 
 
 class GuessHandler(webapp2.RequestHandler):
@@ -253,7 +260,6 @@ class GuessHandler(webapp2.RequestHandler):
         if not changed_since:
             changed_since = 0;
    
-        logging.info(changed_since)
         maps = models.Bid.all().filter('game =', game).filter("modify_time > ", changed_since).fetch(1000)
         #maps = models.Bid.all().filter('game =', game).fetch(1000)
 
@@ -280,18 +286,15 @@ class GuessHandler(webapp2.RequestHandler):
             correct = True
 
 
-        logging.info(correct)
 
         team = db.Key(team_key)
         question = db.Key(question_map_key)
         game = db.Key(game_key)
 
         bid_key = "%s-%s-%s" % (game_key, team_key, question_map_key)
-        logging.info("correct %s wager %s bid key %s" % (correct, wager, bid_key)) 
 
         if wager == "":
             bid = models.Bid.get_by_key_name(bid_key)
-            logging.info(bid)
             if bid:
                 bid.delete()
         else:
