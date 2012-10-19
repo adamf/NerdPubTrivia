@@ -26,3 +26,5 @@ handlers:
   script: SiteAdmin.py
 - url: /test/.*
   script: NDBTest.py
+- url: /data/.*
+  script: RestData.py

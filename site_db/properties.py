@@ -20,12 +20,13 @@ class PhoneNumberProperty(ndb.StringProperty):
     s = self.__strip(value)
     if len(s)==11 and s[:1] == '1':
       s=s[1:]
-    if s === value:
+    if s == value:
       return None
     else:
       return s
 
   def _from_base_type(self, value):
+    s = self.__strip(value)
     return '(%s) %s-%s' % (s[:2],s[3:5],s[6:])
 
 class EmailProperty(ndb.StringProperty):
@@ -45,7 +46,7 @@ class TwitterProperty(ndb.StringProperty):
     return s
 
   def _validate(self, value):
-    s=self.__strip(value):
+    s=self.__strip(value)
     if not re.match(r'^[\w\d_]{2,15}$',value):
       raise ValueError('Invalid Twitter Handle')
 
