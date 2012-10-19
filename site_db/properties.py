@@ -42,6 +42,7 @@ class TwitterProperty(ndb.StringProperty):
     s=str(value).strip()
     if s[:1]=='@':
       s=s[1:]
+    return s
 
   def _validate(self, value):
     s=self.__strip(value):
