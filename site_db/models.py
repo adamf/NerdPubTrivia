@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import datetime
 import re
 import properties as props
@@ -21,16 +20,16 @@ class Venue(SelfKeyModel):
   website = props.URLProperty()
   twitter_handle = props.TwitterProperty()
 
-  def _pre_put_hook(self):
-    if self.key is None:
-      self.key = ndb.Key(self.__class__,
-                         self.__format_name_for_id())
+  # def _pre_put_hook(self):
+  #   if self.key is None:
+  #     self.key = ndb.Key(self.__class__,
+  #                        self.__format_name_for_id())
 
-    if self.id != self.__format_name_for_id(self.display_name):
-      raise ValueError('Venue name can not be changed after assignment.')
+  #   if self.id != self.__format_name_for_id(self.display_name):
+  #     raise ValueError('Venue name can not be changed after assignment.')
 
 class Game(ndb.Model):
-    play_date = ndb.DateTimeProperty(required=True)
+    play_date = props.SafeDateTime(required=True)
     game_name = ndb.StringProperty(default='Nerd Pub Trivia')
     venue = ndb.KeyProperty(kind=Venue, required=True)
 
