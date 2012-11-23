@@ -5,6 +5,7 @@ import datetime
 import time
 import os
 import webapp2
+import random
 from google.appengine.ext.webapp import util
 from google.appengine.dist import use_library
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -17,6 +18,15 @@ import gqlencoder
 
 
 class TestHandler(webapp2.RequestHandler):
+    def createUnusedBasicQuestion(self):
+        c = models.Category(category_text = 'Category ' + str(random.randint(1000,10000)))
+        c.put()
+        q = models.Question(category=c, question_type = 'basic', 
+                question_text = 'Who is question ' + str(random.randint(1000,10000)) + '?')
+        q.put()
+        a = models.Answer(answer_text = [db.Text(str(random.randint(1000,10000)) + ', obviously')],question = q)
+        a.put()
+
     def createStandardGame(self, game):
         self.createTeams(10, game)
         self.createBasicRound(game, 4, 1)
@@ -51,6 +61,8 @@ class TestHandler(webapp2.RequestHandler):
 
             questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=i)
             questionToGame.put()
+            q.isUsed = True
+            q.put()
 
     def createWagerRound(self, game, questionCount, gameRound):
         for i in range(0, questionCount):
@@ -65,6 +77,8 @@ class TestHandler(webapp2.RequestHandler):
 
             questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=i)
             questionToGame.put()
+            q.isUsed = True
+            q.put()
 
     def createPictureRound(self, game, gameRound):
         c = models.Category(category_text = 'Picture round ' + str(gameRound))
@@ -79,6 +93,8 @@ class TestHandler(webapp2.RequestHandler):
 
         questionToGame = models.QuestionGameMap(question=q, game=game, game_round=gameRound, question_index=1)
         questionToGame.put()
+        q.isUsed = True
+        q.put()
 
     def createListRound(self, game, gameRound):
         self.createSpecialRound(game, 'list', gameRound)
@@ -97,6 +113,8 @@ class TestHandler(webapp2.RequestHandler):
         q.put()
         a = models.Answer(answer_text = [db.Text('The Correct Answer')],question = q)
         a.put()
+        q.isUsed = True
+        q.put()
 
         print c.category_text, q.question_text, a.answer_text
 
@@ -113,8 +131,9 @@ class TestHandler(webapp2.RequestHandler):
                         venue = v)
         g.put()
         self.createStandardGame(g)
+        for i in range(0, 50):
+            self.createUnusedBasicQuestion()
 
-        print "Hello World"
         for ven in models.Venue.all().fetch(10):
             for gam in ven.game_set:
                 print "Game started at %s" % (gam.start_time)
@@ -309,11 +328,54 @@ class GuessHandler(webapp2.RequestHandler):
                 bid.modify_time = int(now.strftime('%s'))
                 bid.put()
 
+class AddQuestionHandler(webapp2.RequestHandler):
+    def post(self):
+        question = self.request.get('question')
+        answer = self.request.get('answer') 
+        question_type = self.request.get('type')
+        category = self.request.get('category')
+
+        c = models.Category(category_text = category)
+        c.put()
+        q = models.Question(category=c, question_type = question_type, 
+                question_text = question)
+        q.put()
+        a = models.Answer(answer_text = [answer],question = q)
+        a.put()
+
+class ManageQuestionsHandler(webapp2.RequestHandler):
+    def get(self):
+        game_key = self.request.get('game')
+        game = db.get(game_key)
+
+        maps = models.QuestionGameMap.all().filter('game =', game).fetch(100)
+        used_questions = []
+        for m in maps:
+            used_questions.append({'question': db.to_dict(m.question), 'round': m.game_round, 'index': m.question_index, 
+                'key': m.key()})
+
+
+        query = db.Query(models.Question).filter('isUsed =', False)
+        # now we have all the question keys
+        unused_questions = []
+        for question in query:
+            logging.info(question)
+            unused_questions.append(question)
+
+
+        template_values = { 'game_key': game_key, 'used_questions': used_questions,
+            'question_types': models.Question.question_type.choices, 'unused_questions': unused_questions }
+
+        path = os.path.join(os.path.dirname(__file__), 'templates/manage_questions.html')
+        self.response.out.write(template.render(path,template_values))
+
 
 app = webapp2.WSGIApplication([
         ('/admin/test', TestHandler),
         ('/admin/venue', VenueHandler),
         ('/admin/game', GameHandler),
+        ('/admin/add_question', AddQuestionHandler),
+        ('/admin/game/manage_questions', ManageQuestionsHandler),
         ('/admin/play', PlayHandler),
         ('/admin/play/guess', GuessHandler),
         ('/admin/play/score', ScoreHandler)

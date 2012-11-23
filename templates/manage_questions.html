@@ -1,0 +1,85 @@
+{% include "header.html" %}
+<script>
+</script>
+<style>
+.table {
+    max-width: 700px;
+}
+</style>
+
+<div id="enterQuestionDiv">
+    Question
+    <br/>
+    <input type="text" maxlength="300" size="100" id="newQuestionText"/>
+    <br/>
+    Answer
+    <br/>
+    <input type="text" maxlength="300" size="100" id="newAnswerText"/>
+    <br/>
+    Question Type
+    <br/>
+    <select id="questionType">
+        {% for type in question_types %}
+            <option value="{{type}}">{{type}}</option>
+        {% endfor %}
+    </select>
+
+    <br/>
+{% if game_key %}
+    <input type="button" text="Add Question" value="Add Question To Current Game" id="addToCurrentGameButton"/>
+{% endif %}
+    <input type="button" text="Add Question" value="Add Question" id="addQuestionButton"/>
+    <br/>
+</div>
+<div id="usedQuestionsTableDiv">
+
+{% if game_key %}
+<h2>Questions in this game</h2>
+    <table border="0" cellpadding="0" cellspacing="0" id="reviewQuestions" game_key="{{game_key}}"> 
+        <thead>
+            <tr>
+                <th>Index</th> 
+                <th>Round</th> 
+                <th>Category</th> 
+                <th>Question</th> 
+                <th>Song</th> 
+            </tr>
+        </thead> 
+        <tbody>
+            {% for q in used_questions %}
+                <tr id="{{q.key}}" >
+                    <td> {{q.index}} </td>
+                    <td> {{q.round}} </td>
+                    <td> {{q.question.category.category_text}} </td>
+                    <td> {{q.question.question_text}} </td>
+                    <td> XXX </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<br>
+{% endif %}
+<div id="unusedQuestionsTableDiv">
+<h2>Unassigned Questions</h2>
+    <table border="0" cellpadding="0" cellspacing="0" id="reviewUnusedQuestions"> 
+        <thead>
+            <tr>
+                <th>Question</th> 
+            </tr>
+        </thead> 
+        <tbody>
+            {% for q in unused_questions %}
+                <tr id="{{q.key}}" >
+                    <td> 
+                        {{q.question_text}}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<br>
+
+{% include "footer.html" %}
+

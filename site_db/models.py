@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import datetime
 from google.appengine.ext import db
 
 class Venue(db.Model):
@@ -32,6 +31,7 @@ class Question(db.Model):
     question_type = db.StringProperty(required=True,choices=('basic','picture','list','set','bio', 'wager'))
     question_text = db.TextProperty(required=True)
     category = db.ReferenceProperty(required=True,reference_class=Category)
+    isUsed = db.BooleanProperty(required=True,default=False)
 
 class QuestionGameMap(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)
@@ -47,6 +47,11 @@ class Clue(db.Model):
 class Answer(db.Model):
     question = db.ReferenceProperty(required=True,reference_class=Question)
     answer_text = db.ListProperty(db.Text,required=True)
+
+class Song(db.Model):
+    question = db.ReferenceProperty(required=True,reference_class=Question)
+    song_title = db.TextProperty(db.Text,required=True)
+    song_artist = db.TextProperty(db.Text,required=True)
 
 class Team(db.Model):
     team_name = db.StringProperty(required=True)
