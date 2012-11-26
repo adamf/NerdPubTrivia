@@ -1,10 +1,12 @@
 import re
 import datetime
 from google.appengine.ext import ndb
+from functools import wraps
 
 class CustomStringProperty(ndb.StringProperty):
   def _strip(self, value):
     return str(value).strip()
+
 
 class PhoneNumberProperty(CustomStringProperty):
   def _strip(self, value):
