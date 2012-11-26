@@ -59,8 +59,8 @@ class TwitterProperty(CustomStringProperty):
 
   def _validate(self, value):
     s=self._strip(value)
-    if not re.match(r'^[\w\d_]{2,15}$',value):
-      raise ValueError('Invalid Twitter Handle')
+    if not value is None and not re.match(r'^[\w\d_]{2,15}$',value):
+      raise ValueError('Invalid Twitter Handle:  %s' % (s))
 
   def _to_base_type(self, value):
     s=self._strip(value)
