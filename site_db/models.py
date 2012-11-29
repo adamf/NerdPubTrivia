@@ -116,7 +116,7 @@ class Answer(ndb.Model):
       lambda self: self.answer_text[:499].strip().lower())
 
 
-class QuestionGameMap(ndb.StaticKeyModel):
+class QuestionGameMap(StaticKeyModel):
   question = ndb.KeyProperty(required=True, kind=Question)
   game = ndb.KeyProperty(required=True, kind=Game)
   round_type = ndb.StringProperty(required=True,
@@ -137,7 +137,7 @@ class QuestionGameMap(ndb.StaticKeyModel):
     return self.game
 
 
-class TeamGameMap(ndb.StaticKeyModel):
+class TeamGameMap(StaticKeyModel):
   team = ndb.KeyProperty(required=True, kind=Team)
   game = ndb.KeyProperty(required=True, kind=Game)
 
@@ -148,7 +148,7 @@ class TeamGameMap(ndb.StaticKeyModel):
     return self.game
 
 
-class Bid(ndb.StaticKeyModel):
+class Bid(StaticKeyModel):
   team_instance = ndb.KeyProperty(required=True, kind=TeamGameMap)
   question = ndb.KeyProperty(required=True, kind=QuestionGameMap)
   bid_value = ndb.IntegerProperty(required=True, choices=(1, 2, 3, 4, 5,

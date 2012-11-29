@@ -22,9 +22,14 @@ handlers:
 - url: /images
   static_dir: images
 
+- url: /baseline_data
+  static_dir: baseline_data
+
 - url: /admin/.*
   script: SiteAdmin.py
 - url: /test/.*
   script: NDBTest.py
 - url: /data/.*
   script: RestData.py
+- url: /reload.*
+  script: ReloadData.py
